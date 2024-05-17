@@ -23,6 +23,9 @@ async function run() {
     //collection
     const usersCollection = client.db("olynex").collection("users");
     const tasksCollection = client.db("olynex").collection("tasks");
+    const notificationsCollection = client
+      .db("olynex")
+      .collection("notifications");
 
     // CRUD
     //! user post
@@ -161,6 +164,12 @@ async function run() {
               CoSendStatus: "reject",
             },
           };
+        } else if (CoSendStatus === "pending") {
+          updateDoc = {
+            $set: {
+              CoSendStatus: "pending",
+            },
+          };
         } else {
           return res.status(400).json({ message: "Invalid status" });
         }
@@ -201,13 +210,68 @@ async function run() {
             submitURl: body?.submitURl,
             submitDate: body?.submitDate,
             CoSendStatus: body?.CoSendStatus,
-            submitNote: body?.submitNote
+            submitNote: body?.submitNote,
           },
         };
         const result = await tasksCollection.updateOne(query, updateDoc);
         res.status(201).json(result);
       } catch (err) {
         res.status(500).json({ message: "task submit problem" });
+      }
+    });
+
+    //! post notification
+    app.post("/notifications", async (req, res) => {
+      const notification = req.body;
+      try {
+        const result = await notificationsCollection.insertOne(notification);
+        res.json(result);
+      } catch (err) {
+        res.status(500).json({ message: "notification post error" });
+      }
+    });
+
+    // get notification
+    app.get("/notifications", async (req, res) => {
+      try {
+        const result = await notificationsCollection.find().toArray();
+        res.json(result);
+      } catch (err) {
+        res.status(500).json({ message: "get notification error" });
+      }
+    });
+
+    //update  notification
+    app.patch("/notification/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            count: body?.count,
+            status: body?.status,
+          },
+        };
+        const result = await notificationsCollection.updateOne(
+          query,
+          updateDoc
+        );
+        res.status(201).json(result);
+      } catch (err) {
+        res.status(500).json({ message: "notification  update error" });
+      }
+    });
+
+    // delete notification
+    app.delete("/notification/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      try {
+        const result = await notificationsCollection.deleteOne(query);
+        res.json(result);
+      } catch (err) {
+        console.log(err.message);
       }
     });
 
