@@ -220,6 +220,71 @@ async function run() {
       }
     });
 
+    //! task complete 
+    app.patch("/complete-task/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            bossInfo: body?.bossInfo,
+            mockupInfo: body?.mockupInfo,
+            seoInfo: body?.seoInfo,
+            CoSendStatus: body?.CoSendStatus,
+          },
+        };
+        const result = await tasksCollection.updateOne(query, updateDoc);
+        res.status(201).json(result);
+      } catch (err) {
+        res.status(500).json({ message: "task submit problem" });
+      }
+    });
+
+    //! task send in boss
+    app.patch("/send-boss/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const { bossInfo, mockupInfo, seoInfo } = req.body;
+
+      try {
+        let updateDoc;
+
+        if (bossInfo) {
+          updateDoc = {
+            $set: {
+              bossInfo: bossInfo,
+            },
+          };
+        } else if (mockupInfo) {
+          updateDoc = {
+            $set: {
+              mockupInfo: mockupInfo,
+            },
+          };
+        } else if (seoInfo) {
+          updateDoc = {
+            $set: {
+              seoInfo: seoInfo,
+            },
+          };
+        } else {
+          return res.status(400).json({ message: "Invalid status" });
+        }
+
+        const result = await tasksCollection.updateOne(query, updateDoc);
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Task not found" });
+        }
+
+        res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Task update problem" });
+      }
+    });
+
     //! post notification
     app.post("/notifications", async (req, res) => {
       const notification = req.body;
