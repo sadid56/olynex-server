@@ -133,7 +133,7 @@ async function run() {
           $set: {
             senderId: body?.senderId,
             receiverId: body?.receiverId,
-            CoSendStatus: body?.CoSendStatus,
+            CoStatus: body?.CoStatus,
             sendingDate: body?.sendingDate,
           },
         };
@@ -147,27 +147,27 @@ async function run() {
     app.patch("/task-status/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const { CoSendStatus } = req.body;
+      const { CoStatus } = req.body;
 
       try {
         let updateDoc;
 
-        if (CoSendStatus === "accept") {
+        if (CoStatus === "accept") {
           updateDoc = {
             $set: {
-              CoSendStatus: "accept",
+              CoStatus: "accept",
             },
           };
-        } else if (CoSendStatus === "reject") {
+        } else if (CoStatus === "reject") {
           updateDoc = {
             $set: {
-              CoSendStatus: "reject",
+              CoStatus: "reject",
             },
           };
-        } else if (CoSendStatus === "pending") {
+        } else if (CoStatus === "pending") {
           updateDoc = {
             $set: {
-              CoSendStatus: "pending",
+              CoStatus: "pending",
             },
           };
         } else {
@@ -209,8 +209,26 @@ async function run() {
           $set: {
             submitURl: body?.submitURl,
             submitDate: body?.submitDate,
-            CoSendStatus: body?.CoSendStatus,
+            CoStatus: body?.CoStatus,
             submitNote: body?.submitNote,
+          },
+        };
+        const result = await tasksCollection.updateOne(query, updateDoc);
+        res.status(201).json(result);
+      } catch (err) {
+        res.status(500).json({ message: "task submit problem" });
+      }
+    });
+    // task submit
+    app.patch("/accept-task/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            CoStatus: body?.CoStatus,
+            acceptAt: body?.acceptAt,
           },
         };
         const result = await tasksCollection.updateOne(query, updateDoc);
@@ -228,10 +246,10 @@ async function run() {
       try {
         const updateDoc = {
           $set: {
-            bossInfo: body?.bossInfo,
-            mockupInfo: body?.mockupInfo,
-            seoInfo: body?.seoInfo,
-            CoSendStatus: body?.CoSendStatus,
+            BossStatus: body?.BossStatus,
+            MockupStatus: body?.MockupStatus,
+            SeoStatus: body?.SeoStatus,
+            CoStatus: body?.CoStatus,
           },
         };
         const result = await tasksCollection.updateOne(query, updateDoc);
@@ -245,39 +263,152 @@ async function run() {
     app.patch("/send-boss/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const { bossInfo, mockupInfo, seoInfo } = req.body;
-
+      const body = req.body;
       try {
-        let updateDoc;
-
-        if (bossInfo) {
-          updateDoc = {
-            $set: {
-              bossInfo: bossInfo,
-            },
-          };
-        } else if (mockupInfo) {
-          updateDoc = {
-            $set: {
-              mockupInfo: mockupInfo,
-            },
-          };
-        } else if (seoInfo) {
-          updateDoc = {
-            $set: {
-              seoInfo: seoInfo,
-            },
-          };
-        } else {
-          return res.status(400).json({ message: "Invalid status" });
-        }
-
+        const updateDoc = {
+          $set: {
+            bossInfo: body?.bossInfo,
+            BossStatus: body?.BossStatus
+          },
+        };
         const result = await tasksCollection.updateOne(query, updateDoc);
-
         if (result.matchedCount === 0) {
           return res.status(404).json({ message: "Task not found" });
         }
-
+        res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Task update problem" });
+      }
+    });
+    // //! task send in boss
+    app.patch("/send-mockup/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            mockupInfo: body?.mockupInfo,
+            MockupStatus: body?.MockupStatus
+          },
+        };
+        const result = await tasksCollection.updateOne(query, updateDoc);
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Task not found" });
+        }
+        res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Task update problem" });
+      }
+    });
+    //! task send in SEO
+    app.patch("/send-seo/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            seoInfo: body?.seoInfo,
+            SeoStatus: body?.SeoStatus
+          },
+        };
+        const result = await tasksCollection.updateOne(query, updateDoc);
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Task not found" });
+        }
+        res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Task update problem" });
+      }
+    });
+    //! SEO to boss
+    app.patch("/seo-boss/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            BossStatus: body?.BossStatus
+          },
+        };
+        const result = await tasksCollection.updateOne(query, updateDoc);
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Task not found" });
+        }
+        res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Task update problem" });
+      }
+    });
+    //! reject boss
+    app.patch("/reject-boss/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            CoStatus: body?.CoStatus,
+            BossStatus: body?.BossStatus
+          },
+        };
+        const result = await tasksCollection.updateOne(query, updateDoc);
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Task not found" });
+        }
+        res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Task update problem" });
+      }
+    });
+    //! reject mockup
+    app.patch("/reject-mockup/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            CoStatus: body?.CoStatus,
+            BossStatus: body?.BossStatus,
+            MockupStatus: body?.MockupStatus,
+          },
+        };
+        const result = await tasksCollection.updateOne(query, updateDoc);
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Task not found" });
+        }
+        res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Task update problem" });
+      }
+    });
+    //! reject mockup
+    app.patch("/reject-seo/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      try {
+        const updateDoc = {
+          $set: {
+            CoStatus: body?.CoStatus,
+            BossStatus: body?.BossStatus,
+            MockupStatus: body?.MockupStatus,
+            SeoStatus: body?.SeoStatus
+          },
+        };
+        const result = await tasksCollection.updateOne(query, updateDoc);
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Task not found" });
+        }
         res.status(200).json(result);
       } catch (err) {
         console.error(err);
