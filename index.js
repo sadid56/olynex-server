@@ -102,6 +102,18 @@ async function run() {
       }
     });
 
+    //! get user with id
+    app.get("/singleUser/:id", async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new  ObjectId(id)};
+      try{
+        const result = await usersCollection.findOne(query);
+        res.json(result)
+      }catch(err){
+        console.log(err?.message)
+      }
+    })
+
     //! post task
     app.post("/tasks", async (req, res) => {
       const tasks = req.body;
@@ -250,6 +262,7 @@ async function run() {
             MockupStatus: body?.MockupStatus,
             SeoStatus: body?.SeoStatus,
             CoStatus: body?.CoStatus,
+            finisehdAt: body?.finisehdAt
           },
         };
         const result = await tasksCollection.updateOne(query, updateDoc);
