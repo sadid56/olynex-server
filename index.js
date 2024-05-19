@@ -1,7 +1,8 @@
 const express = require("express");
+require('dotenv').config()
 const cors = require("cors");
 const app = express();
-const PORT = 5000;
+const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
@@ -10,7 +11,7 @@ app.use(express.json());
 // mongodb  connect
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
-  "mongodb+srv://olynex:9ccwm1aq7evQ4gTg@cluster0.dzbhwpo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+ `mongodb+srv://${process.env?.DB_NAME}:${process.env?.DB_PASS}@cluster0.dzbhwpo.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -484,9 +485,9 @@ async function run() {
       }
     });
 
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
@@ -500,6 +501,6 @@ app.get("/", (req, res) => {
   res.send("Olynex server");
 });
 
-app.listen(PORT, () => {
-  console.log(`App listening on PORT ${PORT}`);
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
 });
